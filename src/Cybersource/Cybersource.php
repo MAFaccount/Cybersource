@@ -1,28 +1,24 @@
 <?php
 
-namespace ITWOC;
+namespace Cybersource;
 
 use Illuminate\Support\Facades\Config;
-use ITWOC\Traits\ITWOCValidatorTrait;
+use Cybersource\Traits\CybersourceValidatorTrait;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 use Monolog\Formatter\LineFormatter;
 use SoapClient;
 
-class ITWOC {
-	// use ITWOCValidatorTrait;
+class Cybersource {
+	use CybersourceValidatorTrait;
 
-	protected $_client;
-
-	protected $_wsdlUrl;
-
-	protected $_acquirer;
-
+	
 	protected $_logPath;
+	protected $_sha;
 
 	public function __construct(){
 		$this->init();
-		$this->_logger = new Logger('ITWOC');
+		$this->_logger = new Logger('Cybersource');
 
 		// the default date format is "Y-m-d H:i:s"
 		$dateFormat = "Y n j, g:i a";
@@ -37,49 +33,46 @@ class ITWOC {
 
 	protected function init(){
 		//load data from configuration file
-		$this->_wsdlUrl = config('itwoc.wsdl_file');
-		$this->_acquirer = config('itwoc.acquirer');
-		$this->_logPath = config('itwoc.log_path');
-
-		//register the soapclient
-		$this->_client = new SoapClient( $this->_wsdlUrl ,array("trace" => 1, "exception" => 0));
+		$this->_sha = config('cybersource.sha');
+        $this->_logPath = config('itwoc.log_path');
 	}
 
-	public function addCard(array $data = []) : string{
-        $this->_acquirer['Acquirer']['ARN'] = substr(hash('sha512' , microtime() . uniqid() . str_random(100) ) , 0 , 20);
-        $data = $this->_acquirer + $data;
-
-		try{
-            $this->logInfo(json_encode($data));
-            $res = $this->_client->__Call("AddCard" , [$data]);
-
-
-            $response = [
-                'response' => [
-                    'response_code' => $res->ResponseCode,
-                    'Response_desc' => $res->ResponseDesc,
-                    'response_id' => $res->ReferenceID
-                ]
-            ];
-
-            $this->logInfo(json_encode($response));
-
-            return $this->_acquirer['Acquirer']['ARN'];
-
-        }catch(\SoapException $e){
-            $response = [
-                'response' => [
-                    'response_code' => $e->getCode(),
-                    'Response_desc' => $e->getMessage(),
-                ]
-            ];
-
-            $this->logError(json_encode($response));
-
-            return 'error';
+	public function getSignedFormFields(array $data = [],$secretKey ) : string{
+        if($this->validateRedirectFormData($data) && $secretKey != ''){
+        	$signiture = $this->signFields($data,$secretKey);
+        	$data['signature'] = $signiture;
+        	return ['code' => 200,'data' => $data];
         }
+
+        $response = [
+            'code' => 422,
+            'message' => 'Validation error check your array one of the requiered filed missing or secret key empty'
+        ];
+
+        return $response;
 	}
 
+	
+	public function signFields ($params,$secret_key) {
+	  return $this->signFieldsData($this->buildDataToSignFields($params),$secret_key );
+	}
+
+	public function signFieldsData($data, $secretKey) {
+		$sha        = $this->_sha;
+	    return base64_encode(hash_hmac( $sha , $data, $secretKey, true));
+	}
+
+	public function buildDataToSignFields($params) {
+	        $signedFieldNames = explode(",",$params["signed_field_names"]);
+	        foreach ($signedFieldNames as &$field) {
+	           $dataToSign[] = $field . "=" . $params[$field];
+	        }
+	        return $this->commaSeparateFields($dataToSign);
+	}
+
+	public function commaSeparateFields ($dataToSign) {
+	    return implode(",",$dataToSign);
+	}
 
 
 	//logging functions

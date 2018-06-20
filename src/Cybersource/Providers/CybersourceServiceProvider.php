@@ -17,7 +17,7 @@ class CybersourceServiceProvider extends ServiceProvider{
      */
     public function register()
     {
-        $this->app->bind('itwoc', function () {
+        $this->app->bind('cybersource', function () {
             return new Cybersource();
         });
     }
