@@ -15,7 +15,7 @@
     },
     "autoload" : {
         "psr-4" : {
-            "cybersource\\" : "src/Cybersource"
+            "Cybersource\\" : "src/Cybersource"
         }
     },
      "extra": {
