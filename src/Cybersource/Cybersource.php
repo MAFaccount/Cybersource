@@ -7,7 +7,7 @@ use Cybersource\Traits\CybersourceValidatorTrait;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 use Monolog\Formatter\LineFormatter;
-use SoapClient;
+
 
 class Cybersource {
 	use CybersourceValidatorTrait;
@@ -37,7 +37,8 @@ class Cybersource {
         $this->_logPath = config('itwoc.log_path');
 	}
 
-	public function getSignedFormFields(array $data = [],$secretKey ) : string{
+	public function getSignedFormFields(array $data = [],$secretKey ) : array{
+	   
         if($this->validateRedirectFormData($data) && $secretKey != ''){
         	$signiture = $this->signFields($data,$secretKey);
         	$data['signature'] = $signiture;
