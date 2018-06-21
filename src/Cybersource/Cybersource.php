@@ -53,7 +53,6 @@ class Cybersource {
         return $response;
 	}
 
-	
 	public function signFields ($params,$secret_key) {
 	  return $this->signFieldsData($this->buildDataToSignFields($params),$secret_key );
 	}
