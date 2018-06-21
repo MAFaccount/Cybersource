@@ -2,7 +2,7 @@
 
 namespace Cybersource\Traits;
 
-trait CybersourceValidatorTrait {
+trait CybersourceValidatorTrait { 
 	
     /**
      * $_redirectFormData shows the correct structure for AddCard Service Array
