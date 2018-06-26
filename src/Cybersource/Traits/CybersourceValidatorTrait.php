@@ -3,7 +3,7 @@
 namespace Cybersource\Traits;
 
 trait CybersourceValidatorTrait { 
-	
+    
     /**
      * $_redirectFormData shows the correct structure for AddCard Service Array
      * @var Array
@@ -19,7 +19,8 @@ trait CybersourceValidatorTrait {
         'transacation_type' => '',
         'transaction_uid' => '',
         'unsigned_field_names' => '',
-        'payment_method' => ''
+        'payment_method' => '',
+        
     ];
 
    
@@ -29,9 +30,13 @@ trait CybersourceValidatorTrait {
     }
 
     protected function followsFormat($data , $format) : bool {
-        if(array_keys($data) != array_keys($format))
-            return false;
-
+        $arrayKeys = array_keys($format);
+        foreach ($arrayKeys as $key => $value){
+            if(!isset($data[$value])){
+                return false;
+            }
+        }
+       
         foreach ($data as $key => $value) {
             if(is_array($value)){
                 $bool = $this->followsFormat($value , $format[$key]);
