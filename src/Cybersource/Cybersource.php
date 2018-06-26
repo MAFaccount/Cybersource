@@ -7,6 +7,7 @@ use Cybersource\Traits\CybersourceValidatorTrait;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 use Monolog\Formatter\LineFormatter;
+use Cybersource\Exceptions\CybersourceException;
 
 
 class Cybersource {
@@ -34,35 +35,37 @@ class Cybersource {
 	protected function init(){
 		//load data from configuration file
 		$this->_sha = config('cybersource.sha');
-        $this->_logPath = config('itwoc.log_path');
+        $this->_logPath = config('cybersource.log_path');
 	}
 
 	public function getSignedFormFields(array $data = [],$secretKey ) : array{
-	   
-        if($this->validateRedirectFormData($data) && $secretKey != ''){
+	   	
+	   	if($secretKey == ''){
+	   		throw new CybersourceException('Validation error check your array one of the requiered filed missing or secret key empty',101);
+	   	}
+
+        if($this->validateRedirectFormData($data)){
         	$signiture = $this->signFields($data,$secretKey);
         	$data['signature'] = $signiture;
         	return ['code' => 200,'data' => $data];
+        } 
+        else{
+        	throw new CybersourceException('requiered params missing',103);
         }
-
-        $response = [
-            'code' => 422,
-            'message' => 'Validation error check your array one of the requiered filed missing or secret key empty'
-        ];
 
         return $response;
 	}
 
-	public function signFields ($params,$secret_key) {
+	protected function signFields ($params,$secret_key) {
 	  return $this->signFieldsData($this->buildDataToSignFields($params),$secret_key );
 	}
 
-	public function signFieldsData($data, $secretKey) {
+	protected function signFieldsData($data, $secretKey) {
 		$sha        = $this->_sha;
 	    return base64_encode(hash_hmac( $sha , $data, $secretKey, true));
 	}
 
-	public function buildDataToSignFields($params) {
+	protected function buildDataToSignFields($params) {
 	        $signedFieldNames = explode(",",$params["signed_field_names"]);
 	        foreach ($signedFieldNames as &$field) {
 	           $dataToSign[] = $field . "=" . $params[$field];
@@ -70,7 +73,7 @@ class Cybersource {
 	        return $this->commaSeparateFields($dataToSign);
 	}
 
-	public function commaSeparateFields ($dataToSign) {
+	protected function commaSeparateFields ($dataToSign) {
 	    return implode(",",$dataToSign);
 	}
 
