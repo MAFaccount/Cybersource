@@ -47,7 +47,7 @@ class Cybersource {
         if($this->validateRedirectFormData($data)){
         	$signiture = $this->signFields($data,$secretKey);
         	$data['signature'] = $signiture;
-        	return ['code' => 200,'data' => $data];
+        	return $data;
         } 
         else{
         	throw new CybersourceException('requiered params missing',103);
