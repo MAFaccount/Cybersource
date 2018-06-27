@@ -16,7 +16,7 @@ trait CybersourceValidatorTrait {
         'profile_id' => '',
         'reference_number' => '',
         'signed_field_names' => '',
-        'transacation_type' => '',
+        'transaction_type' => '',
         'transaction_uuid' => '',
         'unsigned_field_names' => '',
         'payment_method' => '',
