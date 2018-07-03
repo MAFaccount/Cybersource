@@ -77,6 +77,15 @@ class Cybersource {
 	    return implode(",",$dataToSign);
 	}
 
+	public function validateCybersourceResponse($data, $secretKey){
+		$signiture = $this->signFields($data,$secretKey);
+		$cybersourceSignature = $data['signature'];
+		if($signiture !=  $cybersourceSignature){
+			throw new CybersourceException('signature not valid',403);
+		}
+		return true;
+	}
+
 
 	//logging functions
 
